@@ -1,0 +1,25 @@
+// ==UserScript==
+// @name        Therebels-IMDB
+// @namespace   Therebels-IMDB
+// @description Avaliaçao de Filmes e Series listados no IMDB
+// @include     http://*therebels.us/showthread.php?t=*
+// @author      LACID
+// @Edit        LACID
+// @version     1.2
+// @copyright   2015/2016
+// @encoding    utf-8
+// @icon        http://i.imgur.com/CDShQni.png
+// @grant       GM_xmlhttpRequest
+// @grant       GM_addStyle
+// @updateURL   //
+// @downloadURL //
+// @noframes
+// ==/UserScript==
+(function(){function g(a){console.log(a);return h("http://www.omdbapi.com",{},a,JSON.parse)}function f(a,b){b=void 0===b?"textContent":b;var c=document.querySelector(a);return c?c[b]:""}function q(){var a=document.querySelector(".navbit:nth-child(5) > a");return a?["Filmes","S\u00e9ries"].indexOf(a.textContent):-1}function r(a,b){if(a.Error)return!1;var c=b.releaseYear-a.Year,d=/,|$/,e=k(a.Director,d),d=k(a.Actors,d),c=0<=c&&2>=c,e="N/A"===e[0]||e.some(function(a){return b.directors.includes(a)}),
+d="N/A"===d[0]||d.some(function(a){return b.cast.includes(a)});return c&&(d||e)}function l(a){var b=document.getElementById("titlefield_year"),c=document.createElement("div");c.className="blockrow ratings";c.innerHTML="\n            <dt>IMDb</dt>\n            <dd>"+a.imdbRating+"</dd>\n        ";var d="http://www.imdb.com/title/"+a.imdbID;c.addEventListener("click",function(){window.open(d)},!1);b.parentNode.insertBefore(c,b.nextSibling);if("N/A"!==a.tomatoMeter){var b="N/A"===a.tomatoUserMeter?"-":
+a.tomatoUserMeter+"%",e=document.createElement("div");e.className="blockrow ratings";e.innerHTML='\n                <dt>Rotten Tomatoes</dt>\n                <dd class="tomatoes-values">(Aprova\u00e7\u00e3o) Cr\u00edticos: '+a.tomatoMeter+"% | Usu\u00e1rios: "+b+"</dd>\n            ";e.addEventListener("click",function(){window.open(a.tomatoURL)},!1);c.parentNode.insertBefore(e,c.nextSibling)}return a}function t(a){var b=/(\d{4})\s*\(EUA\)/i.exec(a);return b&&b[1]||a}function m(a){return(new DOMParser).parseFromString(a,
+"text/html")}function n(a){console.log(a);return a.Error?Promise.reject():h("http://www.imdb.com/title/"+a.imdbID).then(function(b){b=m(b).querySelector(".ratingValue span");a.imdbRating=b.textContent;return a})}function p(a){return"N/A"===a.tomatoURL?a:h(a.tomatoURL).then(function(b){b=m(b).querySelectorAll(".meter-value span");2==b.length&&(a.tomatoMeter=b[0].textContent,b=b[1],b.nextElementSibling||(b=b.textContent,a.tomatoUserMeter=b.substring(0,b.length-1)));return a},function(){return a})}function u(a){var b=
+/([\w\d\s]+).../;return a.split("\n").map(function(a){return(a=b.exec(a))&&a[1].trim()||""})}function k(a,b){return a.split(b).map(function(a){return a.trim()})}function v(a){return(a=/\/(tt\d{7})(?:\/|$)/.exec(a))&&a[1]||""}function w(a,b){return Object.keys(a).map(function(c){return b(c,a[c])})}function x(a){if(a){var b=typeof a;if("string"===b)return a;if("object"===b)return w(a,function(a,b){return[a,b].map(encodeURIComponent).join("=")}).join("&")}return""}function y(a,b,c,d,e){return new Promise(function(f,
+g){GM_xmlhttpRequest({method:a,url:b,headers:c,data:d,onload:"function"===typeof e?function(a){var b=a.responseText;a=a.status;200===a?f(e(b)):g({responseText:e(b),status:a})}:function(a){var b=a.responseText;a=a.status;200===a?f(b):g({responseText:b,status:a})}})})}function h(a,b,c,d){c=x(c);return y("GET",a+(c?"?"+c:""),b||{},"",d)}(function(){var a=q();if(-1!=a){var b={originalTitle:f("#titlefield_title dd"),directors:k(f("#titlefield_direction dd"),/,|$/),releaseYear:t(f("#titlefield_year dd")),
+imdbID:v(f("#titlefield_site dd a","href")),cast:u(f("#titlefield_cast .blockrow")),season:f("#titlefield_season dd"),releaseTitle:f("#uploadfield_title dd")};if(b.originalTitle){GM_addStyle("\n            .ratings {\n                background-color: #FFF8A5 !important;\n                cursor: pointer;\n            }\n            .tomatoes-values {\n                font-size: 11px;\n            }\n        ");var c={plot:"full",tomatoes:!0,type:["movie","series"][a]};b.imdbID?c.i=b.imdbID:c.t=b.originalTitle;
+b.imdbID||"series"==c.type?g(c).then(n).then(p).then(l):g(c).then(function(a){r(a,b)?a=Promise.resolve(a):(c.y=b.releaseYear,a=g(c));a.then(n).then(p).then(l)})}}})()})();
